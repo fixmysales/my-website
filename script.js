@@ -1,105 +1,103 @@
-(function () {
-  "use strict";
+document.addEventListener("DOMContentLoaded", function () {
+    const menuToggle = document.getElementById("menuToggle");
+    const nav = document.getElementById("nav");
 
-  /* ---------- Mobile navigation ---------- */
-  var navToggle = document.getElementById("navToggle");
-  var navLinks = document.getElementById("navLinks");
-
-  if (navToggle && navLinks) {
-    navToggle.addEventListener("click", function () {
-      var isOpen = navLinks.classList.toggle("open");
-      navToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
-    });
-
-    navLinks.querySelectorAll("a").forEach(function (link) {
-      link.addEventListener("click", function () {
-        navLinks.classList.remove("open");
-        navToggle.setAttribute("aria-expanded", "false");
-      });
-    });
-  }
-
-  /* ---------- Active navigation state on scroll ---------- */
-  var sections = Array.prototype.slice.call(document.querySelectorAll("main section[id], #hero"));
-  var navAnchors = Array.prototype.slice.call(document.querySelectorAll(".nav-link"));
-
-  function setActiveLink() {
-    var scrollPos = window.scrollY + 120;
-    var currentId = sections.length ? sections[0].id : null;
-
-    sections.forEach(function (section) {
-      if (section.offsetTop <= scrollPos) {
-        currentId = section.id;
-      }
-    });
-
-    navAnchors.forEach(function (link) {
-      var href = link.getAttribute("href").replace("#", "");
-      link.classList.toggle("active", href === currentId);
-    });
-  }
-
-  /* ---------- Back to top button ---------- */
-  var backToTop = document.getElementById("backToTop");
-
-  function toggleBackToTop() {
-    if (!backToTop) return;
-    backToTop.classList.toggle("visible", window.scrollY > 500);
-  }
-
-  if (backToTop) {
-    backToTop.addEventListener("click", function () {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-  }
-
-  var scrollTicking = false;
-  window.addEventListener("scroll", function () {
-    if (!scrollTicking) {
-      window.requestAnimationFrame(function () {
-        setActiveLink();
-        toggleBackToTop();
-        scrollTicking = false;
-      });
-      scrollTicking = true;
-    }
-  });
-
-  setActiveLink();
-  toggleBackToTop();
-
-  /* ---------- Scroll reveal ---------- */
-  var revealTargets = document.querySelectorAll(
-    ".service-item, .process-step, .solution-card, .why-item, .timeline-item, .market-item, .contact-method, .founder-card"
-  );
-
-  var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  if ("IntersectionObserver" in window && !prefersReducedMotion) {
-    revealTargets.forEach(function (el) {
-      el.classList.add("reveal");
-    });
-
-    var observer = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            observer.unobserve(entry.target);
-          }
+    if (menuToggle && nav) {
+        menuToggle.addEventListener("click", function () {
+            nav.classList.toggle("active");
+            const icon = menuToggle.querySelector("i");
+            if (nav.classList.contains("active")) {
+                icon.classList.remove("fa-bars");
+                icon.classList.add("fa-xmark");
+            } else {
+                icon.classList.remove("fa-xmark");
+                icon.classList.add("fa-bars");
+            }
         });
-      },
-      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
+
+        nav.querySelectorAll("a").forEach(function (link) {
+            link.addEventListener("click", function () {
+                nav.classList.remove("active");
+                const icon = menuToggle.querySelector("i");
+                icon.classList.remove("fa-xmark");
+                icon.classList.add("fa-bars");
+            });
+        });
+    }
+
+    const currentYear = document.getElementById("currentYear");
+    if (currentYear) currentYear.textContent = new Date().getFullYear();
+
+    const backToTop = document.getElementById("backToTop");
+    window.addEventListener("scroll", function () {
+        if (!backToTop) return;
+        backToTop.classList.toggle("show", window.scrollY > 500);
+    });
+
+    if (backToTop) {
+        backToTop.addEventListener("click", function () {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+    }
+
+    const header = document.getElementById("header");
+    window.addEventListener("scroll", function () {
+        if (!header) return;
+        header.style.boxShadow = window.scrollY > 30
+            ? "0 8px 30px rgba(15, 23, 42, 0.08)"
+            : "none";
+    });
+
+    const revealElements = document.querySelectorAll(
+        ".service-card, .solution-card, .process-step, " +
+        ".highlight-card, .stat-card, .industry-list div, " +
+        ".contact-card, .timeline-item"
     );
 
-    revealTargets.forEach(function (el) {
-      observer.observe(el);
+    revealElements.forEach(function (element) {
+        element.classList.add("reveal");
     });
-  }
 
-  /* ---------- Current year in footer ---------- */
-  var yearEl = document.getElementById("year");
-  if (yearEl) {
-    yearEl.textContent = new Date().getFullYear();
-  }
-})();
+    const observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+                entry.target.classList.add("visible");
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.12 });
+
+    revealElements.forEach(function (element) {
+        observer.observe(element);
+    });
+
+    const sections = document.querySelectorAll("section[id]");
+    const navItems = document.querySelectorAll(".nav a");
+
+    window.addEventListener("scroll", function () {
+        let currentSection = "";
+        sections.forEach(function (section) {
+            const sectionTop = section.offsetTop - 150;
+            if (window.scrollY >= sectionTop) {
+                currentSection = section.getAttribute("id");
+            }
+        });
+
+        navItems.forEach(function (link) {
+            link.classList.toggle("active", link.getAttribute("href") === "#" + currentSection);
+        });
+    });
+
+    document.querySelectorAll('a[href^="#"]').forEach(function (link) {
+        link.addEventListener("click", function (event) {
+            const targetId = this.getAttribute("href");
+            if (targetId === "#") return;
+            const target = document.querySelector(targetId);
+            if (target) {
+                event.preventDefault();
+                const targetPosition = target.getBoundingClientRect().top + window.scrollY - 75;
+                window.scrollTo({ top: targetPosition, behavior: "smooth" });
+            }
+        });
+    });
+});
